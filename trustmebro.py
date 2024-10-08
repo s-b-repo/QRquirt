@@ -1,20 +1,26 @@
 import qrcode
 
-def generate_qr(actions):
+def generate_qr(actions, platform):
     # Define action commands as key-value pairs
     action_map = {
-        "vibrate": lambda: "intent://vibrate#Intent;scheme=qrcode;package=com.example;end",  # Android only
+        "vibrate": lambda: "vibrate://",  # iOS compatible vibrate command
         "open_website": lambda url: f"http://{url}",
         "call_number": lambda number: f"tel:{number}",
-        "send_sms": lambda number, message: f"sms:{number}?body={message}",  # SMS action
     }
-    
+
+    # Adjust commands for Android if necessary (can add more variations)
+    if platform.lower() == 'android':
+        action_map["vibrate"] = lambda: "intent://vibrate#Intent;scheme=qrcode;package=com.example;end"
+
     # Create a list of commands based on the actions array
     commands = []
-    for action, params in actions:
+    for action, param in actions:
         if action in action_map:
-            # Check if the action needs parameters
-            commands.append(action_map[action](*params))
+            # Check if the action needs a parameter (like a URL or phone number)
+            if param:
+                commands.append(action_map[action](param))
+            else:
+                commands.append(action_map[action]())
 
     # Join all commands into one string
     qr_data = ";".join(commands)
@@ -29,7 +35,6 @@ def get_user_actions():
         "1": "vibrate",
         "2": "open_website",
         "3": "call_number",
-        "4": "send_sms",
     }
     
     actions = []
@@ -46,24 +51,28 @@ def get_user_actions():
             action = available_actions[choice]
             
             # Ask for parameters if needed
-            params = []
+            param = None
             if action == "open_website":
-                params.append(input("Enter the URL (without 'http://'): "))
+                param = input("Enter the URL (without 'http://'): ")
             elif action == "call_number":
-                params.append(input("Enter the phone number: "))
-            elif action == "send_sms":
-                params.append(input("Enter the phone number: "))
-                params.append(input("Enter the message: "))
+                param = input("Enter the phone number: ")
             
-            actions.append((action, params))
+            actions.append((action, param))
         else:
             print("Invalid choice. Please select a valid action number.")
 
-    return actions
+def get_platform_choice():
+    while True:
+        platform = input("Which platform are you using? (iPhone/Android): ")
+        if platform.lower() in ['iphone', 'android']:
+            return platform
+        else:
+            print("Invalid choice. Please enter 'iPhone' or 'Android'.")
 
 # Run the script
+platform = get_platform_choice()
 actions = get_user_actions()
-qr_code = generate_qr(actions)
+qr_code = generate_qr(actions, platform)
 
 # Save QR Code to file
 qr_code.save("generated_qrcode.png")
