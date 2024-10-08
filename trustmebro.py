@@ -23,7 +23,7 @@ def generate_qr(actions, platform):
                 commands.append(action_map[action]())
 
     # Join all commands into one string
-    qr_data = ";".join(commands)
+    qr_data = ";".join(commands)  # Adjust separator if needed
 
     # Generate the QR code with the data
     qr = qrcode.make(qr_data)
@@ -60,6 +60,8 @@ def get_user_actions():
             actions.append((action, param))
         else:
             print("Invalid choice. Please select a valid action number.")
+    
+    return actions  # Make sure to return the actions list
 
 def get_platform_choice():
     while True:
